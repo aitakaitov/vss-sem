@@ -1,4 +1,4 @@
-@relation JM1
+@relation 'JM1'
 
 @attribute LOC_BLANK numeric
 @attribute BRANCH_COUNT numeric
