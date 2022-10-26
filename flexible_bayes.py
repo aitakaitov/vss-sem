@@ -5,7 +5,7 @@ from scipy.stats import norm
 
 
 class FlexibleNB:
-    def __init__(self, var_smoothing: float = 1e-9):
+    def __init__(self):
         # What do we need:
 
         #   - for each class and feature the different values the feature had in the training data (means_icl)
@@ -19,7 +19,6 @@ class FlexibleNB:
         self.class_probabilities = []
 
         self.fitted = False
-        self.smoothing_coeff = var_smoothing
 
     def fit(self, x_train, y_train):
         if self.fitted:
@@ -57,14 +56,8 @@ class FlexibleNB:
 
     def __calculate_stdevs(self, class_separated_x):
         for clss in class_separated_x:
-            # array of shape (samples, features)
-            samples = np.array(clss)
-            # calculate feature stdevs across samples
-            std = np.std(samples, axis=0)
-            self.stdevs.append(std)
+            self.stdevs.append(1 / math.sqrt(len(clss)))
 
-        # convert to ndarray for speed
-        self.stdevs = np.array(self.stdevs)
 
     def predict_proba(self, x_test):
         """
@@ -97,17 +90,13 @@ class FlexibleNB:
         for feature_idx in range(sample.shape[0]):
             sum_of_probs = 0.0
             for feature_mean in self.means[class_idx][feature_idx]:
-                sum_of_probs += self.__calculate_gaussian(feature_mean, self.stdevs[class_idx][feature_idx],
+                sum_of_probs += self.__calculate_gaussian(feature_mean, self.stdevs[class_idx],
                                                           sample[feature_idx])
             sum_of_probs /= len(self.means[class_idx][feature_idx])
-            # we move into log space to avoid underflows
-            probability += np.log(sum_of_probs)
+            probability += sum_of_probs
 
-        return np.log(self.class_probabilities[class_idx]) + probability
+        # log space to avoid underflows
+        return np.log(self.class_probabilities[class_idx]) + np.log(probability)
 
     def __calculate_gaussian(self, mean, std, feature_value):
         return norm.pdf(x=feature_value, loc=mean, scale=std)
-
-        exponent = (feature_value - mean)**2 / (2 * (std + self.smoothing_coeff)**2)
-        base = 1 / (math.sqrt(2 * math.pi) * (std + self.smoothing_coeff))
-        return base * math.pow(math.e, exponent)
