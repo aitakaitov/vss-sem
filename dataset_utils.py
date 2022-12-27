@@ -20,6 +20,7 @@ class MDPDataset:
         }
 
         self.dataset_name = None
+        self.class_probabilities = [0, 0]
 
         self.__check_file(file_path)
         self.__process_file(file_path)
@@ -80,7 +81,11 @@ class MDPDataset:
 
                 features = [float(f) for f in features]
                 self.samples.append(features)
-                self.labels.append(self.label_to_id[label])
+                label_id = self.label_to_id[label]
+                self.labels.append(label_id)
+                self.class_probabilities[label_id] += 1
+
+        self.class_probabilities = [count / len(self.samples) for count in self.class_probabilities]
 
 
 def load_datasets(dataset_files, dataset_dir):

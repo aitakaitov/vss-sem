@@ -1,0 +1,4 @@
+;precision;recall;f1;fa
+multinomial;0.407;0.077;0.130;0.221;
+gaussian;0.486;0.157;0.237;0.202;
+flexible;0.318;0.120;0.175;0.211;
